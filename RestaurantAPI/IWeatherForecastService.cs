@@ -1,7 +1,11 @@
-﻿namespace RestaurantAPI
+﻿
+using Microsoft.AspNetCore.Mvc;
+
+namespace RestaurantAPI
 {
     public interface IWeatherForecastService
     {
-        IEnumerable<WeatherForecast> Get();
+        IEnumerable<WeatherForecast> Get(GetsInfo info);
+        bool Take(int Amount, MinMax minMax, GetsInfo info);
     }
 }
