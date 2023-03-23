@@ -1,2 +1,2 @@
 # RestaurantAPI
-My first backend project base on udemy course.
+My first backend .NET 7 project base on udemy course.
