@@ -15,10 +15,7 @@ public class WeatherForecastController : ControllerBase
     {
         _logger = logger;
         _service = service;
-        info = new GetsInfo();
-        info.Amount = 5;
-        info.Min = -20;
-        info.Max = 20;
+        info = new GetsInfo(5, -20, 20);
     }
 
     [HttpGet]
