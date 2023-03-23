@@ -21,6 +21,8 @@ namespace RestaurantAPI
             })
         .ToArray();
         }
+
+
         public bool Take(int Amount, MinMax minMax, GetsInfo info)
         {
             if (Amount < 1 || minMax.Max < minMax.Min) return false;

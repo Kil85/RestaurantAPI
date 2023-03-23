@@ -1,4 +1,6 @@
+using Microsoft.Data.SqlClient;
 using RestaurantAPI;
+using RestaurantAPI.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddTransient<IWeatherForecastService, WeatherForecastService>();
+builder.Services.AddDbContext<RestaurantDbContext>();
+builder.Services.AddScoped<RestaurantSeeder>();
+
 var app = builder.Build();
 
 
+var scope = app.Services.CreateScope();
+var seeder = scope.ServiceProvider.GetRequiredService<RestaurantSeeder>();
+
+seeder.Seeder();
+
+Console.WriteLine();
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
