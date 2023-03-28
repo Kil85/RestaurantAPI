@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 
-namespace RestaurantAPI
+namespace RestaurantAPI.Models
 {
     public class UpdateClass
     {

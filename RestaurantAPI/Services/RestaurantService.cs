@@ -25,15 +25,20 @@ namespace RestaurantAPI.Services
     {
         private readonly IMapper _mapper;
         private readonly RestaurantDbContext _dbContext;
+        private readonly ILogger<RestaurantService> _logger;
 
-        public RestaurantService(IMapper mapper, RestaurantDbContext dbContext)
+        public RestaurantService(IMapper mapper, RestaurantDbContext dbContext, ILogger<RestaurantService> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
             _mapper = mapper;
         }
 
         public IEnumerable<RestaurantDto> GetAll()
         {
+
+            _logger.LogWarning("User used GetAll function");
+
             var result = _dbContext
                         .Restaurants
                         .Include(r => r.Adress)
