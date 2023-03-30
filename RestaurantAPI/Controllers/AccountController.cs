@@ -21,5 +21,12 @@ namespace RestaurantAPI.Controllers
             _controller.Register(dto);
             return Ok();
         }
+
+        [HttpPost("login")]
+        public ActionResult Login([FromBody] LoginDto dto)
+        {
+            var result = _controller.Login(dto);
+            return Ok(result);
+        }
     }
 }
