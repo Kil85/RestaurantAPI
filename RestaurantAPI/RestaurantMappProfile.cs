@@ -4,10 +4,10 @@ using RestaurantAPI.Models;
 
 namespace RestaurantAPI
 {
-    public class RestaurantMappPofile : Profile
+    public class RestaurantMappProfile : Profile
 
     {
-        public RestaurantMappPofile()
+        public RestaurantMappProfile()
         {
             CreateMap<Restaurant, RestaurantDto>()
                 .ForMember(x => x.City, c => c.MapFrom(s => s.Adress.City))
@@ -16,8 +16,13 @@ namespace RestaurantAPI
 
             CreateMap<Dish, DishDto>();
 
+            CreateMap<RegisterAccountDto, User>();
+
             CreateMap<CreateRestaurantDto, Restaurant>()
                 .ForMember(x => x.Adress, c => c.MapFrom(s => new Adress() { City = s.City, Street = s.City, PostalCode = s.PostalCode }));
+
+            CreateMap<CreateDishDto, Dish>();
+
         }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RestaurantAPI.Entities;
 using RestaurantAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-
+using RestaurantAPI.Exceptions;
 
 namespace RestaurantAPI.Services
 {
@@ -13,7 +13,7 @@ namespace RestaurantAPI.Services
         RestaurantDto GetById(int id);
         IEnumerable<RestaurantDto> GetAll();
         int CreateRestaurant(CreateRestaurantDto restaurant);
-        public Restaurant Delete(int id);
+        public RestaurantDto Delete(int id);
         public Restaurant Update(UpdateClass update);
 
 
@@ -37,8 +37,6 @@ namespace RestaurantAPI.Services
         public IEnumerable<RestaurantDto> GetAll()
         {
 
-            _logger.LogWarning("User used GetAll function");
-
             var result = _dbContext
                         .Restaurants
                         .Include(r => r.Adress)
@@ -57,7 +55,7 @@ namespace RestaurantAPI.Services
                         .Include(r => r.Dishes)
                         .FirstOrDefault(x => x.Id == id);
 
-            if (result == null) return null;
+            if (result == null) throw new NotFoundException("Restaurant not found");
 
             var restaurantDto = _mapper.Map<RestaurantDto>(result);
 
@@ -74,14 +72,14 @@ namespace RestaurantAPI.Services
             return result.Id;
         }
 
-        public Restaurant Delete(int id)
+        public RestaurantDto Delete(int id)
         {
-            var result = Find(id);
+            var restaurant = Find(id);
 
-            if (result == null) return null;
-
-            _dbContext.Restaurants.Remove(result);
+            _dbContext.Restaurants.Remove(restaurant);
             _dbContext.SaveChanges();
+
+            var result = _mapper.Map<RestaurantDto>(restaurant);
 
             return result;
         }
@@ -90,8 +88,6 @@ namespace RestaurantAPI.Services
         {
 
             var result = Find(update.id);
-
-            if (result == null) return null;
 
             if (update.Name != null) result.Name = update.Name;
             if (update.Description != null) result.Description = update.Description;
@@ -107,7 +103,11 @@ namespace RestaurantAPI.Services
         private Restaurant Find(int id)
         {
             var result = _dbContext.Restaurants
+                        .Include(x => x.Adress)
                         .FirstOrDefault(x => x.Id == id);
+
+            if (result == null) throw new NotFoundException("Restaurant not found");
+
             return result;
         }
     }
