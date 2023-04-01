@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace RestaurantAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize("AgeCheck")]
         public ActionResult<IEnumerable<Restaurant>> GetAll()
         {
             var result = _service.GetAll();
@@ -38,7 +40,6 @@ namespace RestaurantAPI.Controllers
         [HttpPost]
         public ActionResult CreateRestauration([FromBody] CreateRestaurantDto restaurant)
         {
-
             var result = _service.CreateRestaurant(restaurant);
 
             return Created($"/api/restaurant/{result}", null);
@@ -57,6 +58,5 @@ namespace RestaurantAPI.Controllers
             var result = _service.Update(update);
             return Ok(result);
         }
-
     }
 }
