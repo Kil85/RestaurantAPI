@@ -1,4 +1,6 @@
-﻿namespace RestaurantAPI.Entities
+﻿using System.Reflection.Metadata.Ecma335;
+
+namespace RestaurantAPI.Entities
 {
     public class Restaurant
     {
@@ -10,10 +12,11 @@
 
         public string ContactPhone { get; set; }
 
+        public int? CreatedById { get; set; }
+        public virtual User CreatedBy { get; set; }
         public virtual Adress Adress { get; set; }
         public int AdressId { get; set; }
 
         public virtual List<Dish> Dishes { get; set; }
-
     }
 }

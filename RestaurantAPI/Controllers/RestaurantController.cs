@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using RestaurantAPI.Entities;
 using RestaurantAPI.Models;
 using RestaurantAPI.Services;
+using System.Security.Claims;
 
 namespace RestaurantAPI.Controllers
 {
@@ -40,7 +41,8 @@ namespace RestaurantAPI.Controllers
         [HttpPost]
         public ActionResult CreateRestauration([FromBody] CreateRestaurantDto restaurant)
         {
-            var result = _service.CreateRestaurant(restaurant);
+            var userId = int.Parse(User.FindFirst(u => u.Type == ClaimTypes.NameIdentifier).Value);
+            var result = _service.CreateRestaurant(restaurant, userId);
 
             return Created($"/api/restaurant/{result}", null);
         }
