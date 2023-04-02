@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using RestaurantAPI.Entities;
 using System.Net;
 
@@ -7,10 +8,13 @@ namespace RestaurantAPI
     public class RestaurantSeeder
     {
         private readonly RestaurantDbContext _dbContext;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public RestaurantSeeder(RestaurantDbContext dbContext)
+        public RestaurantSeeder(RestaurantDbContext dbContext,
+            IPasswordHasher<User> password)
         {
             _dbContext = dbContext;
+            _passwordHasher = password;
         }
 
         public void Seeder()
@@ -28,6 +32,12 @@ namespace RestaurantAPI
                 {
                     var restaurants = AddRestaurants();
                     _dbContext.Restaurants.AddRange(restaurants);
+                    _dbContext.SaveChanges();
+                }
+                if (!_dbContext.Users.Any())
+                {
+                    var users = AddUsers();
+                    _dbContext.Users.AddRange(users);
                     _dbContext.SaveChanges();
                 }
             }
@@ -52,6 +62,43 @@ namespace RestaurantAPI
 
             };
             return roles;
+        }
+
+        private IEnumerable<User> AddUsers()
+        {
+            var admin = new User()
+            {
+                FirstName = "Admin",
+                Mail = "admin",
+                RoleId = 1
+            };
+            var passwordAdmin = "admin";
+            var hashedPassword = _passwordHasher.HashPassword(admin, passwordAdmin);
+            admin.HashedPassword = hashedPassword;
+
+            var mod = new User()
+            {
+                FirstName = "Moderator",
+                Mail = "moderator",
+                RoleId = 3
+            };
+            var passwordModerator = "moderator";
+            var hashedPasswordMod = _passwordHasher.HashPassword(mod, passwordModerator);
+            mod.HashedPassword = hashedPasswordMod;
+
+            var user = new User()
+            {
+                FirstName = "User",
+                Mail = "user",
+                RoleId = 2
+            };
+            var passwordUser = "moderator";
+            var hashedPasswordUser = _passwordHasher.HashPassword(mod, passwordUser);
+            user.HashedPassword = hashedPasswordMod;
+
+            var users = new List<User>() { admin, mod, user };
+            return users;
+
         }
 
         private IEnumerable<Restaurant> AddRestaurants()

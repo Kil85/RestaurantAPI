@@ -15,8 +15,8 @@ namespace RestaurantAPI.Services
     {
         public void Register(RegisterAccountDto dto);
         public string Login(LoginDto dto);
-
     }
+
     public class AccountService : IAccountService
     {
         private readonly IMapper _mapper;
@@ -24,8 +24,12 @@ namespace RestaurantAPI.Services
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly AuthenticationSettings _authenticationSettings;
 
-        public AccountService(IMapper mapper, RestaurantDbContext dbContext,
-            IPasswordHasher<User> passwordHasher, AuthenticationSettings authenticationSettings)
+        public AccountService(
+            IMapper mapper,
+            RestaurantDbContext dbContext,
+            IPasswordHasher<User> passwordHasher,
+            AuthenticationSettings authenticationSettings
+        )
         {
             _mapper = mapper;
             _dbContext = dbContext;
@@ -49,39 +53,53 @@ namespace RestaurantAPI.Services
             var user = _dbContext.Users
                 .Include(x => x.Role)
                 .FirstOrDefault(u => u.Mail == dto.mail);
+
             if (user == null)
             {
                 throw new UserNotFoundException("Email or Password incorect");
             }
 
-            var passCheck = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, dto.password);
+            var passCheck = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.HashedPassword,
+                dto.password
+            );
+
             if (passCheck == PasswordVerificationResult.Failed)
             {
                 throw new UserNotFoundException("Email or Password incorect");
             }
 
-            var claims = new List<Claim>() {
+            var claims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName),
+                new Claim(ClaimTypes.Role, $"{user.Role.Name}"),
+                new Claim("DateOfBirth", user.DateOfBirth.ToString())
+            };
 
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.FirstName),
-            new Claim(ClaimTypes.Role, $"{user.Role.Name}")
-        };
-            //new Claim(ClaimTypes.DateOfBirth, user.DateOfBirth.Value.ToString("yyyy-MM-dd")),
+            if (!user.Nationality.IsNullOrEmpty())
+            {
+                claims.Add(new Claim("Nationality", user.Nationality));
+            }
 
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey)
+            );
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authenticationSettings.JwtKey));
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddDays(_authenticationSettings.JwtExpiredDays);
 
-            var token = new JwtSecurityToken(_authenticationSettings.JwtIssuer,
+            var token = new JwtSecurityToken(
+                _authenticationSettings.JwtIssuer,
                 _authenticationSettings.JwtIssuer,
                 claims,
                 expires: expires,
-                signingCredentials: cred);
+                signingCredentials: cred
+            );
 
             var tokenHandler = new JwtSecurityTokenHandler();
             return tokenHandler.WriteToken(token);
         }
-
     }
 }
