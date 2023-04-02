@@ -70,7 +70,8 @@ namespace RestaurantAPI
             {
                 FirstName = "Admin",
                 Mail = "admin",
-                RoleId = 1
+                RoleId = 1,
+                DateOfBirth = new DateTime(2000, 2, 06)
             };
             var passwordAdmin = "admin";
             var hashedPassword = _passwordHasher.HashPassword(admin, passwordAdmin);
@@ -80,7 +81,9 @@ namespace RestaurantAPI
             {
                 FirstName = "Moderator",
                 Mail = "moderator",
-                RoleId = 3
+                RoleId = 3,
+                DateOfBirth = new DateTime(2000, 2, 06)
+
             };
             var passwordModerator = "moderator";
             var hashedPasswordMod = _passwordHasher.HashPassword(mod, passwordModerator);
@@ -90,7 +93,9 @@ namespace RestaurantAPI
             {
                 FirstName = "User",
                 Mail = "user",
-                RoleId = 2
+                RoleId = 2,
+                DateOfBirth = new DateTime(2000, 2, 06)
+
             };
             var passwordUser = "moderator";
             var hashedPasswordUser = _passwordHasher.HashPassword(mod, passwordUser);

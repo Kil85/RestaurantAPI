@@ -10,6 +10,11 @@ namespace RestaurantAPI.Authorization
             AuthorizationHandlerContext context,
             ResourceOperationRequirement requirement,
             Restaurant resource
-        ) { }
+        )
+        {
+
+            return Task.CompletedTask;
+        }
     }
+
 }

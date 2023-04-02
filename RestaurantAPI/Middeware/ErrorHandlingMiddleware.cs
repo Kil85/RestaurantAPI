@@ -18,6 +18,11 @@ namespace RestaurantAPI.Middeware
             {
                 await next.Invoke(context);
             }
+            catch (AuthorizationException e)
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync(e.Message);
+            }
             catch (UserNotFoundException userNotFound)
             {
                 context.Response.StatusCode = 400;

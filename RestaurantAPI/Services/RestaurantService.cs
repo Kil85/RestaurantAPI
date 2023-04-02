@@ -4,6 +4,7 @@ using RestaurantAPI.Entities;
 using RestaurantAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantAPI.Exceptions;
+using Microsoft.AspNetCore.Authentication;
 
 namespace RestaurantAPI.Services
 {
@@ -12,8 +13,8 @@ namespace RestaurantAPI.Services
         RestaurantDto GetById(int id);
         IEnumerable<RestaurantDto> GetAll();
         int CreateRestaurant(CreateRestaurantDto restaurant, int createdById);
-        RestaurantDto Delete(int id);
-        Restaurant Update(UpdateClass update);
+        RestaurantDto Delete(int id, int userId);
+        RestaurantDto Update(UpdateClass update, int userId);
     }
 
     public class RestaurantService : IRestaurantService
@@ -70,9 +71,14 @@ namespace RestaurantAPI.Services
             return result.Id;
         }
 
-        public RestaurantDto Delete(int id)
+        public RestaurantDto Delete(int id, int userId)
         {
             var restaurant = Find(id);
+
+            if (restaurant.CreatedById != userId)
+            {
+                throw new AuthorizationException("User is not the creator of the restaurant");
+            }
 
             _dbContext.Restaurants.Remove(restaurant);
             _dbContext.SaveChanges();
@@ -82,18 +88,26 @@ namespace RestaurantAPI.Services
             return result;
         }
 
-        public Restaurant Update(UpdateClass update)
+        public RestaurantDto Update(UpdateClass update, int userId)
         {
-            var result = Find(update.id);
+            var restaurant = Find(update.id);
+
+            if (restaurant.CreatedById != userId)
+            {
+                throw new AuthorizationException("User is not the creator of the restaurant");
+            }
 
             if (update.Name != null)
-                result.Name = update.Name;
+                restaurant.Name = update.Name;
             if (update.Description != null)
-                result.Description = update.Description;
+                restaurant.Description = update.Description;
             if (update.HasDelivery != null)
-                result.HasDelivery = (bool)update.HasDelivery;
+                restaurant.HasDelivery = (bool)update.HasDelivery;
 
             _dbContext.SaveChanges();
+
+            var result = _mapper.Map<RestaurantDto>(restaurant);
+
 
             return result;
         }
