@@ -12,6 +12,7 @@ namespace RestaurantAPI.Controllers
 {
     [Route("api/restaurant")]
     [ApiController]
+    [Authorize]
     public class RestaurantController : ControllerBase
     {
         private readonly IRestaurantService _service;
@@ -22,7 +23,7 @@ namespace RestaurantAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize("AgeCheck")]
+        [Authorize("RestaurantOwners")]
         public ActionResult<IEnumerable<Restaurant>> GetAll()
         {
             var result = _service.GetAll();
@@ -42,7 +43,7 @@ namespace RestaurantAPI.Controllers
         public ActionResult CreateRestaurant([FromBody] CreateRestaurantDto restaurant)
         {
             var userId = int.Parse(User.FindFirst(u => u.Type == ClaimTypes.NameIdentifier).Value);
-            var result = _service.CreateRestaurant(restaurant, userId);
+            var result = _service.CreateRestaurant(restaurant);
 
             return Created($"/api/restaurant/{result}", null);
         }
@@ -50,18 +51,14 @@ namespace RestaurantAPI.Controllers
         [HttpDelete("{id}")]
         public ActionResult<Restaurant> Delete([FromRoute] int id)
         {
-            var userId = int.Parse(User.FindFirst(u => u.Type == ClaimTypes.NameIdentifier).Value);
-
-            var result = _service.Delete(id, userId);
+            var result = _service.Delete(id);
             return Ok(result);
         }
 
-        [HttpPut]
-        public ActionResult<Restaurant> Update([FromBody] UpdateClass update)
+        [HttpPut("{id}")]
+        public ActionResult<Restaurant> Update([FromRoute] int id, [FromBody] UpdateClass update)
         {
-            var userId = int.Parse(User.FindFirst(u => u.Type == ClaimTypes.NameIdentifier).Value);
-
-            var result = _service.Update(update, userId);
+            var result = _service.Update(update, id);
             return Ok(result);
         }
     }

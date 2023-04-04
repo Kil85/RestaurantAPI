@@ -53,9 +53,16 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Nationality", a => a.RequireClaim("Nationality", "Poland"));
     options.AddPolicy("AgeCheck", a => a.AddRequirements(new AgeCheckRequirement(18)));
+    options.AddPolicy(
+        "RestaurantOwners",
+        a => a.AddRequirements(new RestaurantOwnersRequierment(2))
+    );
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, AgeCheckHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ResourceOperationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, RestaurantOwnersHandler>();
+builder.Services.AddScoped<IUserContextService, UserContextService>();
 builder.Services.AddDbContext<RestaurantDbContext>();
 builder.Services.AddScoped<RestaurantSeeder>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
@@ -70,6 +77,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

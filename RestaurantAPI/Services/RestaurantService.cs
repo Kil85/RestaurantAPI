@@ -5,6 +5,9 @@ using RestaurantAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantAPI.Exceptions;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using RestaurantAPI.Authorization;
 
 namespace RestaurantAPI.Services
 {
@@ -12,26 +15,29 @@ namespace RestaurantAPI.Services
     {
         RestaurantDto GetById(int id);
         IEnumerable<RestaurantDto> GetAll();
-        int CreateRestaurant(CreateRestaurantDto restaurant, int createdById);
-        RestaurantDto Delete(int id, int userId);
-        RestaurantDto Update(UpdateClass update, int userId);
+        int CreateRestaurant(CreateRestaurantDto restaurant);
+        RestaurantDto Delete(int id);
+        RestaurantDto Update(UpdateClass update, int id);
     }
 
     public class RestaurantService : IRestaurantService
     {
         private readonly IMapper _mapper;
         private readonly RestaurantDbContext _dbContext;
-        private readonly ILogger<RestaurantService> _logger;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly IUserContextService _userContextService;
 
         public RestaurantService(
             IMapper mapper,
             RestaurantDbContext dbContext,
-            ILogger<RestaurantService> logger
+            IAuthorizationService handler,
+            IUserContextService userContextService
         )
         {
             _dbContext = dbContext;
-            _logger = logger;
             _mapper = mapper;
+            _authorizationService = handler;
+            _userContextService = userContextService;
         }
 
         public IEnumerable<RestaurantDto> GetAll()
@@ -61,21 +67,29 @@ namespace RestaurantAPI.Services
             return restaurantDto;
         }
 
-        public int CreateRestaurant(CreateRestaurantDto restaurant, int createdById)
+        public int CreateRestaurant(CreateRestaurantDto restaurant)
         {
             var result = _mapper.Map<Restaurant>(restaurant);
-            result.CreatedById = createdById;
+            result.CreatedById = _userContextService.GetUserId;
             _dbContext.Restaurants.Add(result);
             _dbContext.SaveChanges();
 
             return result.Id;
         }
 
-        public RestaurantDto Delete(int id, int userId)
+        public RestaurantDto Delete(int id)
         {
             var restaurant = Find(id);
 
-            if (restaurant.CreatedById != userId)
+            var authorizationResult = _authorizationService
+                .AuthorizeAsync(
+                    _userContextService.GetUser,
+                    restaurant,
+                    new ResourceOperationRequirement(ResourceOperations.Delete)
+                )
+                .Result;
+
+            if (!authorizationResult.Succeeded)
             {
                 throw new AuthorizationException("User is not the creator of the restaurant");
             }
@@ -88,11 +102,19 @@ namespace RestaurantAPI.Services
             return result;
         }
 
-        public RestaurantDto Update(UpdateClass update, int userId)
+        public RestaurantDto Update(UpdateClass update, int id)
         {
-            var restaurant = Find(update.id);
+            var restaurant = Find(id);
 
-            if (restaurant.CreatedById != userId)
+            var authorizationResult = _authorizationService
+                .AuthorizeAsync(
+                    _userContextService.GetUser,
+                    restaurant,
+                    new ResourceOperationRequirement(ResourceOperations.Update)
+                )
+                .Result;
+
+            if (!authorizationResult.Succeeded)
             {
                 throw new AuthorizationException("User is not the creator of the restaurant");
             }
@@ -107,7 +129,6 @@ namespace RestaurantAPI.Services
             _dbContext.SaveChanges();
 
             var result = _mapper.Map<RestaurantDto>(restaurant);
-
 
             return result;
         }

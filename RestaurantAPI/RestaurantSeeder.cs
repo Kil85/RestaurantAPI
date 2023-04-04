@@ -10,8 +10,7 @@ namespace RestaurantAPI
         private readonly RestaurantDbContext _dbContext;
         private readonly IPasswordHasher<User> _passwordHasher;
 
-        public RestaurantSeeder(RestaurantDbContext dbContext,
-            IPasswordHasher<User> password)
+        public RestaurantSeeder(RestaurantDbContext dbContext, IPasswordHasher<User> password)
         {
             _dbContext = dbContext;
             _passwordHasher = password;
@@ -27,17 +26,17 @@ namespace RestaurantAPI
                     _dbContext.Roles.AddRange(roles);
                     _dbContext.SaveChanges();
                 }
+                if (!_dbContext.Users.Any())
+                {
+                    var users = AddUsers();
+                    _dbContext.Users.AddRange(users);
+                    _dbContext.SaveChanges();
+                }
 
                 if (!_dbContext.Restaurants.Any())
                 {
                     var restaurants = AddRestaurants();
                     _dbContext.Restaurants.AddRange(restaurants);
-                    _dbContext.SaveChanges();
-                }
-                if (!_dbContext.Users.Any())
-                {
-                    var users = AddUsers();
-                    _dbContext.Users.AddRange(users);
                     _dbContext.SaveChanges();
                 }
             }
@@ -47,19 +46,9 @@ namespace RestaurantAPI
         {
             var roles = new List<Role>()
             {
-                new Role()
-                {
-                    Name = "Admin",
-                },
-                new Role()
-                {
-                    Name = "User",
-                },
-                new Role()
-                {
-                    Name = "Manager",
-                }
-
+                new Role() { Name = "Admin", },
+                new Role() { Name = "User", },
+                new Role() { Name = "Manager", }
             };
             return roles;
         }
@@ -83,7 +72,6 @@ namespace RestaurantAPI
                 Mail = "moderator",
                 RoleId = 3,
                 DateOfBirth = new DateTime(2000, 2, 06)
-
             };
             var passwordModerator = "moderator";
             var hashedPasswordMod = _passwordHasher.HashPassword(mod, passwordModerator);
@@ -95,7 +83,6 @@ namespace RestaurantAPI
                 Mail = "user",
                 RoleId = 2,
                 DateOfBirth = new DateTime(2000, 2, 06)
-
             };
             var passwordUser = "moderator";
             var hashedPasswordUser = _passwordHasher.HashPassword(mod, passwordUser);
@@ -103,7 +90,6 @@ namespace RestaurantAPI
 
             var users = new List<User>() { admin, mod, user };
             return users;
-
         }
 
         private IEnumerable<Restaurant> AddRestaurants()
@@ -126,7 +112,6 @@ namespace RestaurantAPI
                             Description = "Chicken",
                             Price = 10,
                         },
-
                         new Dish()
                         {
                             Name = "Chicken Nuggets",
@@ -139,7 +124,8 @@ namespace RestaurantAPI
                         City = "Kraków",
                         Street = "Długa 5",
                         PostalCode = "30-001"
-                    }
+                    },
+                    CreatedById = 1
                 },
                 new Restaurant()
                 {
@@ -154,11 +140,11 @@ namespace RestaurantAPI
                         City = "Kraków",
                         Street = "Szewska 2",
                         PostalCode = "30-001"
-                    }
+                    },
+                    CreatedById = 1
                 }
             };
             return resoult;
         }
     }
-
 }
