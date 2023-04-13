@@ -24,9 +24,9 @@ namespace RestaurantAPI.Controllers
 
         [HttpGet]
         [Authorize("RestaurantOwners")]
-        public ActionResult<IEnumerable<Restaurant>> GetAll()
+        public ActionResult<IEnumerable<Restaurant>> GetAll([FromQuery] RestaurantQuery query)
         {
-            var result = _service.GetAll();
+            var result = _service.GetAll(query);
 
             return Ok(result);
         }

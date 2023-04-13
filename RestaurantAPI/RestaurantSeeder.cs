@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Bogus;
+using Bogus.Extensions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantAPI.Entities;
 using System.Net;
@@ -16,7 +18,7 @@ namespace RestaurantAPI
             _passwordHasher = password;
         }
 
-        public void Seeder()
+        public void Seeder(int howMany)
         {
             if (_dbContext.Database.CanConnect())
             {
@@ -35,7 +37,7 @@ namespace RestaurantAPI
 
                 if (!_dbContext.Restaurants.Any())
                 {
-                    var restaurants = AddRestaurants();
+                    var restaurants = AddRestaurants(howMany);
                     _dbContext.Restaurants.AddRange(restaurants);
                     _dbContext.SaveChanges();
                 }
@@ -92,59 +94,35 @@ namespace RestaurantAPI
             return users;
         }
 
-        private IEnumerable<Restaurant> AddRestaurants()
+        private IEnumerable<Restaurant> AddRestaurants(int howMany)
         {
-            var resoult = new List<Restaurant>()
-            {
-                new Restaurant()
-                {
-                    Name = "KFC",
-                    Description =
-                        "KFC (short for Kentucky Fried Chicken) is an American fast food restaurant chain headquartered in Louisville, Kentucky, that specializes in fried chicken.",
-                    ContactMail = "contact@kfc.com",
-                    ContactPhone = "123456789",
-                    HasDelivery = true,
-                    Dishes = new List<Dish>()
-                    {
-                        new Dish()
-                        {
-                            Name = "Nashville Hot Chicken",
-                            Description = "Chicken",
-                            Price = 10,
-                        },
-                        new Dish()
-                        {
-                            Name = "Chicken Nuggets",
-                            Description = "Nuggets",
-                            Price = 5,
-                        },
-                    },
-                    Adress = new Adress()
-                    {
-                        City = "Kraków",
-                        Street = "Długa 5",
-                        PostalCode = "30-001"
-                    },
-                    CreatedById = 1
-                },
-                new Restaurant()
-                {
-                    Name = "McDonald Szewska",
-                    Description =
-                        "McDonald's Corporation (McDonald's), incorporated on December 21, 1964, operates and franchises McDonald's restaurants.",
-                    ContactMail = "contact@mcdonald.com",
-                    ContactPhone = "987654321",
-                    HasDelivery = true,
-                    Adress = new Adress()
-                    {
-                        City = "Kraków",
-                        Street = "Szewska 2",
-                        PostalCode = "30-001"
-                    },
-                    CreatedById = 1
-                }
-            };
-            return resoult;
+            var locale = "en";
+            var randomAdress = new Faker<Adress>(locale)
+                .RuleFor(a => a.City, c => c.Address.City())
+                .RuleFor(a => a.Street, c => c.Address.StreetName())
+                .RuleFor(a => a.PostalCode, c => c.Address.ZipCode());
+
+            var randomDishes = new Faker<Dish>(locale)
+                .RuleFor(d => d.Name, e => e.Random.String(10))
+                .RuleFor(d => d.Description, e => e.Random.String(70))
+                .RuleFor(d => d.Price, e => e.Random.Int(1, 1000));
+
+            var randomRestaurant = new Faker<Restaurant>(locale)
+                .RuleFor(r => r.Name, s => s.Company.CompanyName().ClampLength(1, 15))
+                .RuleFor(
+                    r => r.Description,
+                    s => s.Random.String2(100, "abcd efgh ijkl mnop rstu wxyz")
+                )
+                .RuleFor(r => r.HasDelivery, s => s.Random.Bool())
+                .RuleFor(r => r.ContactMail, s => s.Internet.Email())
+                .RuleFor(r => r.ContactPhone, s => s.Phone.PhoneNumber("###-###-###").ToString())
+                .RuleFor(r => r.CreatedById, 1)
+                .RuleFor(r => r.Adress, s => randomAdress.Generate())
+                .RuleFor(r => r.Dishes, s => randomDishes.Generate(6));
+
+            var result = randomRestaurant.Generate(howMany);
+
+            return result;
         }
     }
 }

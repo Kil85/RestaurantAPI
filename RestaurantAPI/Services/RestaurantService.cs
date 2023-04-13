@@ -8,13 +8,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using RestaurantAPI.Authorization;
+using System.Linq.Expressions;
 
 namespace RestaurantAPI.Services
 {
     public interface IRestaurantService
     {
         RestaurantDto GetById(int id);
-        IEnumerable<RestaurantDto> GetAll();
+        PageResult<RestaurantDto> GetAll(RestaurantQuery query);
         int CreateRestaurant(CreateRestaurantDto restaurant);
         RestaurantDto Delete(int id);
         RestaurantDto Update(UpdateClass update, int id);
@@ -40,16 +41,55 @@ namespace RestaurantAPI.Services
             _userContextService = userContextService;
         }
 
-        public IEnumerable<RestaurantDto> GetAll()
+        public PageResult<RestaurantDto> GetAll(RestaurantQuery query)
         {
-            var result = _dbContext.Restaurants
+            var baseRestaurants = _dbContext.Restaurants
                 .Include(r => r.Adress)
                 .Include(r => r.Dishes)
+                .Where(
+                    r =>
+                        query.UsersDescription == null
+                        || (
+                            r.Description.ToLower().Contains(query.UsersDescription.ToLower())
+                            || r.Name.ToLower().Contains(query.UsersDescription.ToLower())
+                        )
+                );
+
+            if (!string.IsNullOrEmpty(query.SortBy))
+            {
+                var dictionary = new Dictionary<string, Expression<Func<Restaurant, object>>>
+                {
+                    { nameof(Restaurant.Name), r => r.Name },
+                    { nameof(Restaurant.Description), r => r.Description },
+                    { nameof(Restaurant.CreatedBy), r => r.CreatedBy },
+                };
+
+                var sortDecision = dictionary[query.SortBy];
+
+                if (query.OrderBy == OrderBy.ASC)
+                {
+                    baseRestaurants = baseRestaurants.OrderBy(sortDecision);
+                }
+                else
+                {
+                    baseRestaurants = baseRestaurants.OrderByDescending(sortDecision);
+                }
+            }
+
+            var restaurants = baseRestaurants
+                .Skip(query.PageSize * (query.PageNumber - 1))
+                .Take(query.PageSize)
                 .ToList();
 
-            var restaurantsDtos = _mapper.Map<List<RestaurantDto>>(result);
+            var restaurantsDtos = _mapper.Map<List<RestaurantDto>>(restaurants);
 
-            return restaurantsDtos;
+            var result = new PageResult<RestaurantDto>(
+                restaurantsDtos,
+                baseRestaurants.Count(),
+                query.PageNumber,
+                query.PageSize
+            );
+            return result;
         }
 
         public RestaurantDto GetById(int id)

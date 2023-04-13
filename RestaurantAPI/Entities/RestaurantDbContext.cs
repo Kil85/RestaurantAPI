@@ -5,7 +5,7 @@ namespace RestaurantAPI.Entities
     public class RestaurantDbContext : DbContext
     {
         private string _connectionString =
-            "Server=localhost;Database=CurrentRestaurant;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False";
+            "Server=localhost;Database=NewRestaurant;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=False";
         public DbSet<Restaurant> Restaurants { get; set; }
         public DbSet<Dish> Dishes { get; set; }
         public DbSet<Adress> Adresses { get; set; }

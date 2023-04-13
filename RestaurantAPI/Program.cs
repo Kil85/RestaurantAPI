@@ -71,9 +71,17 @@ builder.Services.AddScoped<IDishService, DishService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IValidator<RegisterAccountDto>, RegisterUserValidator>();
+builder.Services.AddScoped<IValidator<RestaurantQuery>, RestaurantQueryValidator>();
 builder.Services.AddScoped<TimeMeasurementMiddleware>();
 builder.Services.AddScoped<ErrorHandlingMiddleware>();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(
+    options =>
+        options.AddPolicy(
+            "FirstCors",
+            policy => policy.WithOrigins("http:localhost").AllowAnyMethod().AllowAnyHeader()
+        )
+);
 
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
@@ -81,10 +89,15 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+app.UseResponseCaching();
+app.UseStaticFiles();
+
 var scope = app.Services.CreateScope();
 var seeder = scope.ServiceProvider.GetRequiredService<RestaurantSeeder>();
 
-seeder.Seeder();
+app.UseCors("FirstCors");
+
+seeder.Seeder(100);
 
 // Configure the HTTP request pipeline.
 
