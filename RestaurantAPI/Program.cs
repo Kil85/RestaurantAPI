@@ -59,6 +59,8 @@ builder.Services.AddAuthorization(options =>
     );
 });
 
+Console.WriteLine();
+
 builder.Services.AddScoped<IAuthorizationHandler, AgeCheckHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ResourceOperationHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, RestaurantOwnersHandler>();
